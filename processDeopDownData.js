@@ -22,7 +22,7 @@ const conn = mariadb.createConnection({
   //allow us to import this file with database connection
   host: host,
   port: port,
-  user: user,
+  user: dbuser,
   password: password,
   database: database,
 });
