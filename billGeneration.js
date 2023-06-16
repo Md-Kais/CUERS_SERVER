@@ -1,7 +1,7 @@
-const loadData = require("./loadData.js");
+const loadData = require('./loadData.js');
 async function getBill(conn, info) {
   const { Bill } = info;
-  console.log("Bill: ", Bill);
+  console.log('Bill: ', Bill);
   const tableInfo = {};
   const tableDesc = {};
 
@@ -25,7 +25,7 @@ async function getBill(conn, info) {
       return new Promise((resolve, reject) => {
         // let query = "select * from Activity where activity_type_id = 10 and sector_or_program like 'CSE%'";
         console.log(activity_type_id);
-        let tableName = "Evaluates_Course_Activity";
+        let tableName = 'Evaluates_Course_Activity';
         let query = `WITH acFactor AS
 (SELECT DISTINCT factor FROM Activity ac WHERE ac.activity_type_id = ${activity_type_id}
 AND ac.sector_or_program LIKE '${sector_or_program}%' ),
@@ -55,7 +55,7 @@ group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no
           activity_type_id === 6 ||
           (activity_type_id >= 8 && activity_type_id <= 15)
         ) {
-          tableName = "Processes_Semester_Activity";
+          tableName = 'Processes_Semester_Activity';
           query = `WITH acFactor AS
 		  (SELECT DISTINCT factor FROM Activity ac WHERE ac.activity_type_id = ${activity_type_id}
 		  AND ac.sector_or_program LIKE '${sector_or_program}%' ),
@@ -118,8 +118,7 @@ SELECT distinct eca.course_id as 'Course no',
     (select real_bill FROM billCheck) AS 'টাকার পরিমাণ'
        FROM Evaluates_Course_Activity eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and eca.sector_or_program like '${sector_or_program}' and eca.activity_type_id=1
 group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
-        } 
-        else if (activity_type_id === 3) {
+        } else if (activity_type_id === 3) {
           query = `WITH cntMembers AS (
     SELECT COUNT(*) AS count
     FROM Exam_Committee ec
@@ -139,9 +138,8 @@ SELECT distinct
        FROM
            Processes_Semester_Activity eca WHERE eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and sector_or_program like '${sector_or_program}' and activity_type_id=3
 group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
-console.log(query)
-        } 
-        else if(activity_type_id === 4){
+          console.log(query);
+        } else if (activity_type_id === 4) {
           query = `WITH acFactor AS 
           (SELECT DISTINCT factor FROM Activity ac WHERE ac.activity_type_id = ${activity_type_id}
           AND ac.sector_or_program LIKE '${sector_or_program}%' ),
@@ -191,10 +189,8 @@ console.log(query)
               AND (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final )
                   SELECT studentCheck.*, (select real_bill FROM billCheck) AS 'টাকার পরিমাণ', (Select bill from billCheck) as 'Initial bill'
                   FROM studentCheck;`;
-            // console.log(query)
-        }
-        
-        else if (activity_type_id === 5) {
+          // console.log(query)
+        } else if (activity_type_id === 5) {
           query = `with daysCheck as (select distinct quantity from Evaluates_Course_Activity eca
             where activity_type_id = 5 and eca.factor = 'দিন' ),
      hoursCheck as (select distinct quantity from Evaluates_Course_Activity eca
@@ -221,23 +217,21 @@ SELECT distinct eca.course_id as 'Course no',
        FROM Evaluates_Course_Activity eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and sector_or_program like 'ব্যবহারিক' and activity_type_id=5
 group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
         }
-          // console.log("query:", query);
+        // console.log("query:", query);
 
         conn.query(query, (err, results) => {
           if (err) {
             reject(err);
           } else {
-            //tableDesc[tableName] = results;
             let obj = Object(results)[0];
-            // console.log("results: ", Object(results)[0]);
             if (obj !== undefined) {
               obj = JSON.parse(JSON.stringify(obj));
-              obj["activity_type_id"] = activity_type_id;
-              obj["sector_or_program"] = sector_or_program;
-                obj["front"] = front;
-                if(obj["Course no"] === undefined){
-                    obj["Course no"] = "";
-                }
+              obj['activity_type_id'] = activity_type_id;
+              obj['sector_or_program'] = sector_or_program;
+              obj['front'] = front;
+              if (obj['Course no'] === undefined) {
+                obj['Course no'] = '';
+              }
               activityThings.push(obj);
             }
             resolve();
@@ -253,7 +247,6 @@ group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no
 }
 
 module.exports = { getBill };
-
 
 /*
  *
