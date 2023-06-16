@@ -21,11 +21,11 @@ const mariadb = require('mysql'); //import mariadb
 router.use(bodyParser.json());
 const conn = mariadb.createConnection({
   //allow us to import this file with database connection
-  host: 'h1p.h.filess.io',
-  port: '3305',
-  user: 'CUERS_realenter',
-  password: 'f031ad57d5d061a2c1003b21f5d9af7771fbfcce',
-  database: 'CUERS_realenter',
+  host: 'localhost',
+  port: '3306',
+  user: 'cuers',
+  password: 'cuers23',
+  database: 'cuers',
 });
 
 router.use((req, res, next) => {
