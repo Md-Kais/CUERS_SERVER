@@ -1,10 +1,19 @@
+require('dotenv').config();
+var host = process.env.HOST;
+var port = process.env.PORT;
+var dbuser = process.env.DBUSER;
+var password = process.env.PASSWORD;
+var database = process.env.DATABASE;
+
 const { Router, query } = require('express'); //import Router class
 // const db = require('../database')
 const router = Router();
 const express = require('express');
 const bodyParser = require('body-parser');
+
 const cors = require('cors');
 const toEnglishNumber = require('./toEnglishNumber.js');
+const toBanglaNumber = require('./toBanglaNumber.js');
 router.use(cors());
 // const app = express();
 // const {getActivityList} = require('./pdfGeneration.js');
@@ -21,13 +30,12 @@ const mariadb = require('mysql'); //import mariadb
 router.use(bodyParser.json());
 const conn = mariadb.createConnection({
   //allow us to import this file with database connection
-  host: 'h1p.h.filess.io',
-  port: '3305',
-  user: 'CUERS_realenter',
-  password: 'f031ad57d5d061a2c1003b21f5d9af7771fbfcce',
-  database: 'CUERS_realenter',
+  host: host,
+  port: port,
+  user: dbuser,
+  password: password,
+  database: database,
 });
-
 router.use((req, res, next) => {
   console.log('Request made to /USERS Route');
   next(); //needs to go to the middleware
@@ -150,7 +158,7 @@ async function updateData(tableName, row, updatedData, getTableInfo) {
     console.log('PkvalueString: ', pkValueString);
     let val = '';
     if (dataTypes[colType].localeCompare('int(11)') == 0) {
-      val += `${colType} = ${value}`;
+      val += `${colType} = ${toEnglishNumber(value)}`;
     } else {
       val += `${colType} =  '${value}'`;
     }
@@ -236,7 +244,6 @@ async function dropdownData(dropdownChanges) {
 }
 
 const fs = require('fs');
-const toBanglaNumber = require('./toBanglaNumber.js');
 
 router.post('/processDropDownData', async (req, res) => {
   try {
@@ -252,24 +259,58 @@ router.post('/processDropDownData', async (req, res) => {
 
     // Read the existing JSON file
     const filePath = './Data/dropdown_options.json';
-    const existingData = fs.readFileSync(filePath, 'utf-8');
-    const jsonData = JSON.parse(existingData);
+    const backupFilePath = './Data/dropdown_options_backup.json';
+    let existingData = fs.readFileSync(filePath, 'utf-8');
+    let jsonData, backupData;
+    console.log('Existing data: ', existingData);
+    try {
+      jsonData = JSON.parse(existingData);
+    } catch (err) {
+      console.log('jsonData is empty, trying to get backup');
+      if (jsonData == null || Object.keys(jsonData).length == 0) {
+        try {
+          existingData = fs.readFileSync(backupFilePath, 'utf-8');
+          jsonData = JSON.parse(existingData);
+          // make a copy of the backupData
+          backupData = JSON.parse(JSON.stringify(jsonData));
+        } catch (err) {
+          console.log('backup is also empty, trying to get {}');
+          if (jsonData == null || Object.keys(jsonData).length == 0) {
+            jsonData = {};
+          }
+        }
+      }
+    }
 
     if (operation && operation == 'write') {
-      if (!jsonData[storageLabel]) {
+      if (jsonData && !jsonData[storageLabel]) {
         jsonData[storageLabel] = [value];
       } else {
         jsonData[storageLabel].push(value);
       }
-      fs.writeFile(filePath, JSON.stringify(jsonData), (err) => {
-        if (err) {
-          console.error(err);
-          res.status(500).json({ error: 'Error updating data' });
-          return;
-        }
-        // After successfully writing to the file, make a response
-        res.json(JSON.stringify(jsonData));
-      });
+      if (jsonData != null && Object.keys(jsonData).length != 0) {
+        fs.writeFile(
+          backupFilePath,
+          JSON.stringify(jsonData),
+          (backupError) => {
+            if (backupError) {
+              console.error(backupError);
+              res.status(500).json({ error: 'Error updating data' });
+              return;
+            }
+            fs.writeFile(filePath, JSON.stringify(jsonData), (fileError) => {
+              if (fileError) {
+                console.error(fileError);
+                res.status(500).json({ error: 'Error updating data' });
+                return;
+              }
+              res.json(JSON.stringify(jsonData));
+            });
+          }
+        );
+      } else {
+        res.json(JSON.stringify(backupData));
+      }
     } else {
       if (dynamicOps == true) {
         let colString = cols.join(', ');
@@ -278,7 +319,7 @@ router.post('/processDropDownData', async (req, res) => {
         let result = dataX.map((item) => Object.values(item).join(' - '));
         const dropdownOptions = result.reduce((acc, option) => {
           const [id, name] = option.split(' - ');
-          console.log('spliting: ', id, name);
+          // console.log('spliting: ', id, name);
           const englishId = toEnglishNumber(id.trim().split(' ')[0]);
           if (tableName != 'Course') {
             acc[englishId] = `${toBanglaNumber(id)}- ${name}`;
@@ -290,19 +331,45 @@ router.post('/processDropDownData', async (req, res) => {
         // Update or add data to the JSON file
         // Data already exists, update it
         jsonData[storageLabel] = dropdownOptions;
-        console.log('After convering: ', dropdownOptions);
 
+        console.log('DynamicOps are generated, now jsonData: ', jsonData);
         // Write the updated data back to the JSON file
-        fs.writeFile(filePath, JSON.stringify(jsonData), (err) => {
-          if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Error updating data' });
-            return;
-          }
-          res.json(JSON.stringify(jsonData));
-        });
+        if (jsonData != null && Object.keys(jsonData).length != 0) {
+          fs.writeFile(
+            backupFilePath,
+            JSON.stringify(jsonData),
+            (backupError) => {
+              if (backupError) {
+                console.error(backupError);
+                res.status(500).json({ error: 'Error updating data' });
+                return;
+              }
+              fs.writeFile(filePath, JSON.stringify(jsonData), (fileError) => {
+                if (fileError) {
+                  console.error(fileError);
+                  res.status(500).json({ error: 'Error updating data' });
+                  return;
+                }
+                res.json(JSON.stringify(jsonData));
+              });
+            }
+          );
+        } else {
+          res.json(JSON.stringify(backupData));
+        }
       } else {
-        res.json(JSON.stringify(jsonData));
+        if (jsonData != null && Object.keys(jsonData).length != 0) {
+          res.json(JSON.stringify(jsonData));
+        } else {
+          fs.writeFile(filePath, JSON.stringify(jsonData), (fileError) => {
+            if (fileError) {
+              console.error(fileError);
+              res.status(500).json({ error: 'Error updating data' });
+              return;
+            }
+            res.json(JSON.stringify(backupData));
+          });
+        }
       }
     }
   } catch (err) {
@@ -421,11 +488,13 @@ router.post('/authenticatelogin', (req, res) => {
   const { evaluator_id, password, role } = req.body;
   console.log(evaluator_id, password, role);
   if (evaluator_id && password) {
+    //console.log(evaluator_id + role);
     const query = `
         select * from Login_Info
         where evaluator_id = "${evaluator_id}" and role = "${role}"
         `;
     conn.query(query, function (error, data) {
+      console.log(data);
       if (data?.length > 0) {
         for (var count = 0; count < data.length; count++) {
           if (
@@ -439,6 +508,7 @@ router.post('/authenticatelogin', (req, res) => {
           } else {
             return res.json({ msg: 'Incorrect Password' });
           }
+          console.log(res);
         }
       } else {
         return res.json({ msg: 'Incorrect Evaluator Id' });
