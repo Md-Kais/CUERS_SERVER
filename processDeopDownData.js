@@ -1,3 +1,12 @@
+require('dotenv').config();
+var host = process.env.HOST;
+var port = process.env.PORT;
+var user = process.env.USER;
+var password = process.env.PASSWORD;
+var database = process.env.DATABASE;
+
+console.log(host);
+
 const { Router, query } = require('express'); //import Router class
 // const db = require('../database')
 const router = Router();
@@ -11,11 +20,11 @@ const mariadb = require('mysql'); //import mariadb
 router.use(bodyParser.json());
 const conn = mariadb.createConnection({
   //allow us to import this file with database connection
-  host: 'localhost',
-  port: '3306',
-  user: 'cuers',
-  password: 'cuers23',
-  database: 'cuers',
+  host: host,
+  port: port,
+  user: user,
+  password: password,
+  database: database,
 });
 
 router.use((req, res, next) => {
