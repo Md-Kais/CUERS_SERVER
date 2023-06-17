@@ -1,7 +1,7 @@
 const loadData = require("./loadData.js");
 async function getBill(conn, info) {
   const { Bill } = info;
-  console.log("Bill: ", Bill);
+  // console.log("Bill: ", Bill);
   const tableInfo = {};
   const tableDesc = {};
 
@@ -24,7 +24,7 @@ async function getBill(conn, info) {
 
       return new Promise((resolve, reject) => {
         // let query = "select * from Activity where activity_type_id = 10 and sector_or_program like 'CSE%'";
-        console.log(activity_type_id);
+        // console.log(activity_type_id);
         let tableName = "Evaluates_Course_Activity";
         let query = `WITH acFactor AS
 (SELECT DISTINCT factor FROM Activity ac WHERE ac.activity_type_id = ${activity_type_id}
@@ -139,7 +139,7 @@ SELECT distinct
        FROM
            Processes_Semester_Activity eca WHERE eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and sector_or_program like '${sector_or_program}' and activity_type_id=3
 group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
-console.log(query)
+// console.log(query)
         } 
         else if(activity_type_id === 4 && sector_or_program === 'স্ক্রুটিনী'){
           query=`WITH acFactor AS
@@ -223,7 +223,7 @@ console.log(query)
               AND (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final )
                   SELECT studentCheck.*, (select real_bill FROM billCheck) AS 'টাকার পরিমাণ', (Select bill from billCheck) as 'Initial bill'
                   FROM studentCheck;`;
-            console.log(query)
+            //console.log(query)
         }
         
         else if (activity_type_id === 5) {
@@ -311,7 +311,7 @@ from tempTable;`;
     }
   );
   return Promise.all(promises).then(() => {
-    // console.log("Begula", activityThings);
+    console.log("Begula", activityThings);
     return activityThings;
   });
 }

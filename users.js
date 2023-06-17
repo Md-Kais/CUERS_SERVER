@@ -484,6 +484,20 @@ router.post('/processData', (req, res) => {
     });
 });
 
+router.post('/process_semester_info',(req,res) => {
+  // console.log('kais pare na');
+  // console.log(req.body);
+
+  const {query}=req.body;
+  //console.log(query);
+    conn.query(query,function(error,data){
+      if(data){
+        res.json(JSON.stringify(data));  
+        // console.log(data);
+      }
+    })
+});
+
 router.post('/authenticatelogin', (req, res) => {
   const { evaluator_id, password, role } = req.body;
   console.log(evaluator_id, password, role);
