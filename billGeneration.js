@@ -14,7 +14,10 @@ async function getBill(conn, info) {
       factor,
       sector_or_program,
       activity_type_id,
+      year
     }) => {
+      console.log('year:', year)
+      console.log('evaluator_id:', evaluator_id)
       // console.log("evaluator_id", evaluator_id);
       // console.log("semester_no", semester_no);
       // console.log("front", front);
@@ -31,7 +34,7 @@ async function getBill(conn, info) {
 AND ac.sector_or_program LIKE '${sector_or_program}%' ),
 ecaQuantity AS ( SELECT DISTINCT quantity FROM ${tableName} eca
 WHERE eca.activity_type_id = ${activity_type_id} AND eca.semester_no =${semester_no}
-AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}'
+AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}' and eca.year = ${year}
 AND eca.factor = (SELECT factor from acFactor) ),
  billCheck AS (
     Select
@@ -40,6 +43,7 @@ AND eca.factor = (SELECT factor from acFactor) ),
     AND eca.semester_no =  ${semester_no}
     AND eca.activity_type_id = ${activity_type_id}
     AND eca.activity_type_id = ac.activity_type_id AND eca.sector_or_program = '${sector_or_program}'
+    AND eca.year = ${year}
     AND ac.sector_or_program LIKE '${sector_or_program}%' AND eca.factor like '${factor}'
     AND ac.factor = (SELECT factor from acFactor)
     AND (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final), 
@@ -51,7 +55,7 @@ AND eca.factor = (SELECT factor from acFactor) ),
     sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'portion',
     (select real_bill FROM billCheck group by course_id) AS 'amount'
        FROM ${tableName} eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and eca.sector_or_program like '${sector_or_program}' and eca.activity_type_id=${activity_type_id}
-group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no)
+group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year)
 select group_concat(\`Course no\`) as 'Course no', group_concat(\`studentNo\`) AS 'খাতা/ছাত্রের সংখ্যা/পৃষ্ঠার সংখ্যা', group_concat(\`hours\`) AS 'কত ঘণ্টার পরীক্ষা',
 group_concat(\`examNo\`) as 'মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা', group_concat(\`portion\`) as 'অর্ধ/পূর্ণ পত্র', sum(\`amount\`) as 'টাকার পরিমাণ'
 from tempTable;`;
@@ -65,7 +69,7 @@ from tempTable;`;
 		  AND ac.sector_or_program LIKE '${sector_or_program}%' ),
 		  ecaQuantity AS ( SELECT DISTINCT quantity FROM ${tableName} eca
 		  WHERE eca.activity_type_id = ${activity_type_id} AND eca.semester_no =${semester_no}
-		  AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}'
+		  AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}' and eca.year = ${year}
 		  AND eca.factor = (SELECT factor from acFactor) ),
 		   billCheck AS (
 			  Select
@@ -74,6 +78,7 @@ from tempTable;`;
 			  AND eca.semester_no =  ${semester_no}
 			  AND eca.activity_type_id = ${activity_type_id}
 			  AND eca.activity_type_id = ac.activity_type_id AND eca.sector_or_program = '${sector_or_program}'
+        AND eca.year = ${year}
 			  AND ac.sector_or_program LIKE '${sector_or_program}%' AND eca.factor = '${factor}'
 			  AND ac.factor = (SELECT factor from acFactor)
 			  AND (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final)
@@ -84,7 +89,7 @@ from tempTable;`;
 			  sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS "অর্ধ/পূর্ণ পত্র",
 			  (select real_bill FROM billCheck) AS 'টাকার পরিমাণ'
 				 FROM ${tableName} eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and eca.sector_or_program like '${sector_or_program}' and eca.activity_type_id=${activity_type_id}
-		  group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
+		  group by eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year;`;
         } 
         else if (activity_type_id === 2) {
           query = `WITH acFactor AS
@@ -99,6 +104,7 @@ from tempTable;`;
                eca.semester_no = ${semester_no} AND
                eca.evaluator_id = ${evaluator_id} AND
                eca.sector_or_program = '${sector_or_program}' AND
+               eca.year = ${year} AND
                eca.factor = (SELECT factor from acFactor)
          ),
     billCheck AS (
@@ -111,6 +117,7 @@ FROM Activity ac INNER JOIN Evaluates_Course_Activity eca
        eca.activity_type_id = ac.activity_type_id AND
        eca.sector_or_program = '${sector_or_program}' AND
        ac.sector_or_program LIKE '${sector_or_program}%' AND
+       eca.year = ${year} AND
        eca.factor = '${factor}' AND
        ac.factor = (SELECT factor from acFactor) AND
        (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final), 
@@ -122,7 +129,7 @@ SELECT distinct eca.course_id as 'Course no',
     sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'portion',
     (select real_bill FROM billCheck group by course_id) AS 'amount'
        FROM Evaluates_Course_Activity eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and eca.sector_or_program like '${sector_or_program}' and eca.activity_type_id=1
-group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no)
+group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year)
 select group_concat(\`Course no\`) as 'Course no', group_concat(\`studentNo\`) AS 'খাতা/ছাত্রের সংখ্যা/পৃষ্ঠার সংখ্যা', group_concat(\`hours\`) AS 'কত ঘণ্টার পরীক্ষা',
 group_concat(\`examNo\`) as 'মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা', group_concat(\`portion\`) as 'অর্ধ/পূর্ণ পত্র', sum(\`amount\`) as 'টাকার পরিমাণ'
 from tempTable;`;
@@ -132,7 +139,7 @@ from tempTable;`;
     SELECT COUNT(*) AS count
     FROM Exam_Committee ec
     WHERE ec.semester_no = ${semester_no} AND
-    ec.program = 'অনার্স'
+    ec.program = 'অনার্স' AND ec.year = ${year}
 ), billSum AS(
 SELECT (SUM(bill) / (SELECT count from cntMembers) ) as real_bill FROM Activity ac INNER JOIN Course_in_Semester_Exam cise
 ON cise.semester_no = ${semester_no} AND cise.program = 'অনার্স' AND
@@ -146,7 +153,7 @@ SELECT distinct
     (select real_bill FROM billSum) AS 'টাকার পরিমাণ'
        FROM
            Processes_Semester_Activity eca WHERE eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and sector_or_program like '${sector_or_program}' and activity_type_id=3
-group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
+group by eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year;`;
 // console.log(query)
         }
         else if(activity_type_id === 4 && sector_or_program === 'স্ক্রুটিনী'){
@@ -156,7 +163,8 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
             ,
               ecaQuantity AS ( SELECT DISTINCT quantity FROM Evaluates_Course_Activity eca
           WHERE eca.activity_type_id = 4 AND eca.semester_no =${semester_no}
-          AND eca.evaluator_id = ${evaluator_id}  AND eca.sector_or_program = 'অনার্স'
+          AND eca.evaluator_id = ${evaluator_id}  AND eca.sector_or_program = 'অনার্স' 
+          AND eca.year = ${year}
           AND eca.factor = (SELECT factor FROM acFactor) )
             ,
               studentCheck AS (
@@ -167,7 +175,7 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
               sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS "portion",
               row_number() over ( order by ECA.course_id ) as id
                   FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id}  and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like 'স্ক্রুটিনী' and ECA.activity_type_id=4
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
                   ),
               billSum as (
                   SELECT sum((select bill FROM Activity ac where activity_type_id = 4 and sector_or_program = 'স্ক্রুটিনী') ) as bill
@@ -188,6 +196,7 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
           ecaQuantity AS ( SELECT DISTINCT quantity FROM Evaluates_Course_Activity eca
           WHERE eca.activity_type_id = ${activity_type_id} AND eca.semester_no =${semester_no}
           AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}'
+          AND eca.year = ${year}
           AND eca.factor = (SELECT factor from acFactor) ),
               studentCheck AS (
                   SELECT distinct ECA.course_id as "Course no",
@@ -196,24 +205,24 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
               sum(CASE WHEN factor like 'দিন' or factor like 'সদস্য সংখ্যা' or factor like 'পরীক্ষার সংখ্যা' THEN quantity ELSE 0 END) AS "মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা",
               sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'অর্ধ/পূর্ণ পত্র'
                   FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
                   ),
               calcCopyNoSNoP AS (
                 SELECT sum(CASE WHEN factor like 'ছাত্রের সংখ্যা' or factor like 'পৃষ্ঠার সংখ্যা' THEN quantity ELSE 0 END) AS 'খাতা/ছাত্রের সংখ্যা/পৃষ্ঠার সংখ্যা'
                 FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
               ), calcDaysNoMNoE AS (
                 SELECT sum(CASE WHEN factor like 'দিন' or factor like 'সদস্য সংখ্যা' or factor like 'পরীক্ষার সংখ্যা' THEN quantity ELSE 0 END) AS "মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা"
                 FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
               ), calcHalfFull AS (
                 SELECT sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'অর্ধ/পূর্ণ পত্র'
                 FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
               ), calcHours AS (
                 SELECT sum(CASE WHEN factor like 'ঘণ্টা' THEN quantity ELSE 0 END) AS "কত ঘণ্টার পরীক্ষা"
                 FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
-          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no
+          group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
               ),
            billCheck AS (
               Select bill,
@@ -226,6 +235,7 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
               AND eca.semester_no =  ${semester_no}
               AND eca.activity_type_id = ${activity_type_id}
               AND eca.activity_type_id = ac.activity_type_id AND eca.sector_or_program = '${sector_or_program}'
+              AND eca.year = ${year}
               AND ac.sector_or_program LIKE '${sector_or_program}%' AND eca.factor = '${factor}'
               AND ac.factor = (SELECT factor from acFactor)
               AND (SELECT quantity from ecaQuantity) BETWEEN ac.quantity_initial AND ac.quantity_final )
@@ -236,9 +246,9 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no;`;
 
         else if (activity_type_id === 5) {
           query = `with daysCheck as (select distinct quantity from Evaluates_Course_Activity eca
-            where activity_type_id = 5 and eca.factor = 'দিন' ),
+            where activity_type_id = 5 and evaluator_id= ${evaluator_id} and eca.factor = 'দিন' and eca.year = ${year}),
      hoursCheck as (select distinct quantity from Evaluates_Course_Activity eca
-             where activity_type_id = 5 and evaluator_id= ${evaluator_id} and eca.factor = 'ঘণ্টা'),
+             where activity_type_id = 5 and evaluator_id= ${evaluator_id} and eca.factor = 'ঘণ্টা' and eca.year = ${year}),
     billCheck as (SELECT case when
     (select  quantity from hoursCheck hc where quantity >= 3 and quantity <= 4) then
     ( Case when
@@ -260,7 +270,7 @@ SELECT distinct eca.course_id as 'Course no',
     sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'portion',
     (select ac_bill FROM billCheck) AS 'amount'
        FROM Evaluates_Course_Activity eca where eca.evaluator_id=${evaluator_id} and semester_no = ${semester_no} and sector_or_program like 'ব্যবহারিক' and activity_type_id=5
-group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no)
+group by eca.course_id, eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year)
 select group_concat(\`Course no\`) as 'Course no', group_concat(\`studentNo\`) AS 'খাতা/ছাত্রের সংখ্যা/পৃষ্ঠার সংখ্যা', group_concat(\`hours\`) AS 'কত ঘণ্টার পরীক্ষা',
        group_concat(\`examNo\`) as 'মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা', group_concat(\`portion\`) as 'অর্ধ/পূর্ণ পত্র', sum(\`amount\`) as 'টাকার পরিমাণ'
 from tempTable;`;
@@ -277,6 +287,7 @@ from tempTable;`;
               obj['activity_type_id'] = activity_type_id;
               obj['sector_or_program'] = sector_or_program;
               obj['front'] = front;
+              // obj['year'] = year;
               if (obj['Course no'] === undefined) {
                 obj['Course no'] = '';
               }
