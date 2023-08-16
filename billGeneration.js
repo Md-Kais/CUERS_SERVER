@@ -1,4 +1,4 @@
-const loadData = require('./loadData.js');
+const {loadData} = require('./loadData.js');
 async function getBill(conn, info) {
   const { Bill } = info;
   // console.log("Bill: ", Bill);

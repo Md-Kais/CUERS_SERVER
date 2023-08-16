@@ -1,6 +1,5 @@
 async function loadData(conn, tableName, conditionCheck, query) {
   return new Promise((resolve, reject) => {
-    // const query = `SELECT * FROM ${tableName}`;
     //console.log("colName is:", colName);
     // console.log("At boss, Query: ", query);
     let query1;
@@ -27,4 +26,4 @@ async function loadData(conn, tableName, conditionCheck, query) {
   });
 }
 
-module.exports = loadData;
+module.exports = {loadData};

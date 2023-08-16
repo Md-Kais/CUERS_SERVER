@@ -1,4 +1,4 @@
-const loadData = require('./loadData.js');
+const {loadData} = require('./loadData.js');
 async function getActivityList(conn, semester_no){
     const courseActivityQuery = `select distinct A.activity_name, A.id, eca.sector_or_program from Evaluates_Course_Activity as eca join Activity_Type A on eca.activity_type_id = A.id where eca.semester_no = ${semester_no}`;
     const semesterActivityQuery = `select distinct A.activity_name, A.id, psa.sector_or_program from Processes_Semester_Activity as psa join Activity_Type A on psa.activity_type_id = A.id where psa.semester_no = ${semester_no}`;
