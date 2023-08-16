@@ -15,7 +15,6 @@ async function processDropDownData(props){
         condition,
         value,
       } = props;
-      console.log("Imm here");
 
     const filePath = './Data/dropdown_options.json';
     const backupFilePath = './Data/dropdown_options_backup.json';

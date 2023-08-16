@@ -1,6 +1,5 @@
 const { Router, query } = require('express'); //import Router class
 const router = Router();
-const express = require('express');
 const bodyParser = require('body-parser');
 
 const cors = require('cors');
@@ -77,10 +76,10 @@ router.post('/loadTableInfo', (req, res) => {
 });
 
 router.post('/processDropDownData', async (req, res) => {
-
   processDropDownData(req.body.data.params).then((result) =>{
     // console.log("Besult is here:", result)
-    res.json(result)
+    res.json(JSON.stringify(result))
+    res.end()
   }).catch((err) =>{
     console.log(err)
     res.status(400).send(err);
@@ -145,6 +144,7 @@ router.post('/authenticatelogin', (req, res) => {
     });
   }
 });
+
 router.post('/pdfGeneration', (req, res) => {
   const {
     semester_no,
