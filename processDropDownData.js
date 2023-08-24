@@ -139,7 +139,7 @@ async function processDropDownData(props){
         }
       }
     }
-    return jsonData;
+    return JSON.stringify(jsonData);
 }
 
 async function processingDropDownData(tableName, colString, condition) {

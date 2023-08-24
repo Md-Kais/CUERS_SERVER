@@ -1,14 +1,14 @@
 const {loadData} = require('./loadData.js');
 async function getBill(conn, info) {
-  const { Bill } = info;
+  const { billInfo } = info;
   // console.log("Bill: ", Bill);
   const tableInfo = {};
   const tableDesc = {};
 
   const activityThings = [];
-  const promises = Bill.map(
+  const promises = billInfo.map(
     ({
-      evaluator_id,
+      evaluator_id, 
       semester_no,
       front,
       factor,
@@ -275,7 +275,7 @@ select group_concat(\`Course no\`) as 'Course no', group_concat(\`studentNo\`) A
        group_concat(\`examNo\`) as 'মোট দিন/সদস্য সংখ্যা/পরীক্ষার সংখ্যা', group_concat(\`portion\`) as 'অর্ধ/পূর্ণ পত্র', sum(\`amount\`) as 'টাকার পরিমাণ'
 from tempTable;`;
         }
-        // console.log("query:", query);
+        console.log("query:", query);
 
         conn.query(query, (err, results) => {
           if (err) {
