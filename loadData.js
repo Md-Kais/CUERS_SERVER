@@ -11,13 +11,13 @@ async function loadData(conn, tableName, conditionCheck, tableColNames, query) {
       let colNames = tableColNames.join(', ')
       query1 = `SELECT ${colNames} FROM ${tableName};`;
     }
-    else if(tableColNames == undefined && tableName !== undefined){
-      query1 = `SELECT * from ${tableName};`
-    }
     else if(conditionCheck !== undefined && conditionCheck !== "" && tableName !== undefined) {
       // console.log("colName is:", conditionCheck)
       query1 = `SELECT * FROM ${tableName} WHERE ${conditionCheck};`;
       console.log("query is:", query1);
+    }
+    else if(tableColNames == undefined && tableName !== undefined){
+      query1 = `SELECT * from ${tableName};`
     }
 
     conn.query(query1, function (err, result) {

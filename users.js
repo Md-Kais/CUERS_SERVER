@@ -118,11 +118,23 @@ router.post('/profiledata', (req,res) =>{
   where evaluator_name = '${evaluator_name}'`;
   console.log(query);
   conn.query(query, (err, data) => {
-    if(data){
+    if(data && data[0].profilePic != undefined){
       const profilePic = data[0].profilePic;
       console.log("data:", data, "data[0]", data[0].profilePic)
       res.setHeader('Content-Type', 'image/jpeg')
       res.send(profilePic)
+    }
+    else{
+      const placeholderImagePath = './assets/placeholder.jpg';
+      fs.readFile(placeholderImagePath, (err, placeholderImageBuffer) => {
+        if (err) {
+          console.error('Error reading placeholder image:', err);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.send(placeholderImageBuffer);
+      });
     }
   })
 });
