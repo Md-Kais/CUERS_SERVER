@@ -1,4 +1,4 @@
-async function loadData(conn, tableName, conditionCheck, query) {
+async function loadData(conn, tableName, conditionCheck, tableColNames, query) {
   return new Promise((resolve, reject) => {
     //console.log("colName is:", colName);
     // console.log("At boss, Query: ", query);
@@ -7,12 +7,16 @@ async function loadData(conn, tableName, conditionCheck, query) {
     if(query){
         query1 = query;
     }
-    else if(conditionCheck !== undefined && conditionCheck !== "") {
+    else if(tableColNames !== undefined && tableName !== undefined){
+      let colNames = tableColNames.join(', ')
+      query1 = `SELECT ${colNames} FROM ${tableName};`;
+    }
+    else if(tableColNames == undefined && tableName !== undefined){
+      query1 = `SELECT * from ${tableName};`
+    }
+    else if(conditionCheck !== undefined && conditionCheck !== "" && tableName !== undefined) {
       // console.log("colName is:", conditionCheck)
       query1 = `SELECT * FROM ${tableName} WHERE ${conditionCheck};`;
-      console.log("query is:", query1);
-    } else {
-      query1 = `SELECT * FROM ${tableName}`;
       console.log("query is:", query1);
     }
 

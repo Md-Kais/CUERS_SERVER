@@ -36,10 +36,16 @@ ecaQuantity AS ( SELECT DISTINCT quantity FROM ${tableName} eca
 WHERE eca.activity_type_id = ${activity_type_id} AND eca.semester_no =${semester_no}
 AND eca.evaluator_id = ${evaluator_id} AND eca.sector_or_program = '${sector_or_program}' and eca.year = ${year}
 AND eca.factor = (SELECT factor from acFactor) ),
+calcHalfFull AS (
+  SELECT sum(CASE WHEN factor like 'অর্ধ/পূর্ণ' THEN quantity ELSE 0 END) AS 'অর্ধ/পূর্ণ পত্র'
+  FROM Evaluates_Course_Activity ECA where ECA.evaluator_id= ${evaluator_id} and ECA.semester_no = ${semester_no}  and ECA.sector_or_program like '${sector_or_program}' and ECA.activity_type_id=${activity_type_id}
+group by ECA.course_id, ECA.sector_or_program, ECA.evaluator_id, ECA.semester_no, ECA.year
+),
  billCheck AS (
     Select
     CASE WHEN (ac.quantity_final - ac.quantity_initial >= 10000 || ac.factor = (SELECT factor FROM acFactor))
-    THEN bill * eca.quantity ELSE bill END AS real_bill FROM Activity ac INNER JOIN ${tableName} eca on eca.evaluator_id = ${evaluator_id}
+    THEN bill * eca.quantity * (CASE WHEN ((SELECT * from calcHalfFull)>0 ) THEN (SELECT * from calcHalfFull) ELSE 1 END) 
+    ELSE bill * (CASE WHEN ((SELECT * from calcHalfFull)>0 ) THEN (SELECT * from calcHalfFull) ELSE 1 END) END AS real_bill FROM Activity ac INNER JOIN ${tableName} eca on eca.evaluator_id = ${evaluator_id}
     AND eca.semester_no =  ${semester_no}
     AND eca.activity_type_id = ${activity_type_id}
     AND eca.activity_type_id = ac.activity_type_id AND eca.sector_or_program = '${sector_or_program}'
@@ -231,7 +237,7 @@ group by eca.sector_or_program, eca.evaluator_id, eca.semester_no, eca.year;`;
                   * (CASE WHEN ((SELECT * from calcDaysNoMNoE)>0 ) THEN (SELECT * from calcDaysNoMNoE)  ELSE 1 END)
                   * (CASE WHEN ((SELECT * from calcHours)>0 ) THEN (SELECT * from calcHours) ELSE 1 END)
                   * (CASE WHEN ((SELECT * from calcHalfFull)>0 ) THEN (SELECT * from calcHalfFull) ELSE 1 END)
-                  ELSE bill * (SELECT * from calcCopyNoSNop) END AS real_bill FROM Activity ac INNER JOIN Evaluates_Course_Activity eca on eca.evaluator_id = ${evaluator_id}
+                  ELSE bill * (SELECT * from calcCopyNoSNop) * (CASE WHEN ((SELECT * from calcHalfFull)>0 ) THEN (SELECT * from calcHalfFull) ELSE 1 END) END AS real_bill FROM Activity ac INNER JOIN Evaluates_Course_Activity eca on eca.evaluator_id = ${evaluator_id}
               AND eca.semester_no =  ${semester_no}
               AND eca.activity_type_id = ${activity_type_id}
               AND eca.activity_type_id = ac.activity_type_id AND eca.sector_or_program = '${sector_or_program}'

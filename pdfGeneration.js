@@ -4,8 +4,8 @@ async function getActivityList(conn, semester_no){
     const semesterActivityQuery = `select distinct A.activity_name, A.id, psa.sector_or_program from Processes_Semester_Activity as psa join Activity_Type A on psa.activity_type_id = A.id where psa.semester_no = ${semester_no}`;
     try{
         const activities = {};
-        activities["courseActivities"] = await loadData(conn, undefined, undefined, courseActivityQuery);
-        activities["semesterActivities"] = await loadData(conn, undefined, undefined, semesterActivityQuery);
+        activities["courseActivities"] = await loadData(conn, undefined, undefined, undefined, courseActivityQuery);
+        activities["semesterActivities"] = await loadData(conn, undefined, undefined, undefined, semesterActivityQuery);
         return activities;
     }
     catch(err){
@@ -27,7 +27,7 @@ async function getCourseActivityTable(conn, activity_type_id, sector_or_program,
     const query = 
         `SELECT course_id as 'Course no', c.title 'Course title', ${groupString}, E.evaluator_name as 'Name', E.designation as 'Designation', concat(E.dept_name, ', ', E.university_name) as "Address" FROM Evaluates_Course_Activity eca join Evaluator E on eca.evaluator_id = E.evaluator_id join Course c on eca.course_id = c.id WHERE semester_no = ${semester_no} and sector_or_program like "%${sector_or_program}%" and activity_type_id=${activity_type_id} GROUP BY activity_type_id, sector_or_program, E.evaluator_name, course_id, semester_no order by course_id;`;
 
-    let tableData = await loadData(conn, undefined, undefined, query);
+    let tableData = await loadData(conn, undefined, undefined, undefined, query);
     return tableData;
 }
 
@@ -46,7 +46,7 @@ async function getSemesterActivityTable(conn, activity_type_id, sector_or_progra
     const query = 
         `SELECT E.evaluator_name as 'Name', E.designation as 'Designation', concat(E.dept_name, ', ', E.university_name) as "Address", ${groupString}  FROM Processes_Semester_Activity psa join Evaluator E on psa.evaluator_id = E.evaluator_id  WHERE semester_no = ${semester_no} and sector_or_program like "%${sector_or_program}%" and activity_type_id=${activity_type_id} GROUP BY activity_type_id, sector_or_program, E.evaluator_name, semester_no`;
 
-    let tableData = await loadData(conn, undefined, undefined, query);
+    let tableData = await loadData(conn, undefined, undefined, undefined, query);
     return tableData;
 }
 
@@ -55,7 +55,7 @@ async function getFactors(conn, activity_type_id, sector_or_program, semester_no
     const query = ` select distinct factor from ${tableName} eca where activity_type_id = ${activity_type_id} and sector_or_program like '%${sector_or_program}%' and semester_no = ${semester_no}`;
     try{
         let factors;
-        factors = await loadData(conn, undefined, undefined, query);
+        factors = await loadData(conn, undefined, undefined, undefined, query);
         const factorArr = factors.map((factor) => factor.factor);
         return factorArr;
     }

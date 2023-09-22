@@ -1,5 +1,6 @@
 const { Router, query } = require('express'); //import Router class
 const router = Router();
+const fs = require('fs');
 const bodyParser = require('body-parser');
 
 const cors = require('cors');
@@ -78,7 +79,7 @@ router.post('/loadTableInfo', (req, res) => {
 router.post('/processDropDownData', async (req, res) => {
   processDropDownData(req.body.data.params).then((result) =>{
     // console.log("Besult is here:", result)
-    res.json(JSON.stringify(result))
+    res.json(result)
     res.end()
   }).catch((err) =>{
     console.log(err)
@@ -109,6 +110,21 @@ router.post('/process_semester_info',(req,res) => {
         // console.log(data);
       }
     })
+});
+
+router.post('/profiledata', (req,res) =>{
+  const {evaluator_name} = req.body;
+  const query = `select profilePic from Evaluator
+  where evaluator_name = '${evaluator_name}'`;
+  console.log(query);
+  conn.query(query, (err, data) => {
+    if(data){
+      const profilePic = data[0].profilePic;
+      console.log("data:", data, "data[0]", data[0].profilePic)
+      res.setHeader('Content-Type', 'image/jpeg')
+      res.send(profilePic)
+    }
+  })
 });
 
 router.post('/authenticatelogin', (req, res) => {
