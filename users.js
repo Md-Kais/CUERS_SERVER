@@ -1,5 +1,6 @@
 const { Router, query } = require('express'); //import Router class
 const router = Router();
+const fs = require('fs');
 const bodyParser = require('body-parser');
 
 const cors = require('cors');
@@ -79,6 +80,7 @@ router.post('/loadTableInfo', (req, res) => {
 });
 
 router.post('/processDropDownData', async (req, res) => {
+<<<<<<< HEAD
     processDropDownData(req.body.data.params)
         .then((result) => {
             // console.log("Besult is here:", result)
@@ -89,6 +91,16 @@ router.post('/processDropDownData', async (req, res) => {
             console.log(err);
             res.status(400).send(err);
         });
+=======
+  processDropDownData(req.body.data.params).then((result) =>{
+    // console.log("Besult is here:", result)
+    res.json(result)
+    res.end()
+  }).catch((err) =>{
+    console.log(err)
+    res.status(400).send(err);
+  })
+>>>>>>> b7a7c31ae74b42837389ed15b28c0d32dac1fac5
 });
 
 router.post('/processData', (req, res) => {
@@ -113,6 +125,33 @@ router.post('/process_semester_info', (req, res) => {
             // console.log(data);
         }
     });
+});
+
+router.post('/profiledata', (req,res) =>{
+  const {evaluator_name} = req.body;
+  const query = `select profilePic from Evaluator
+  where evaluator_name = '${evaluator_name}'`;
+  console.log(query);
+  conn.query(query, (err, data) => {
+    if(data && data[0].profilePic != undefined){
+      const profilePic = data[0].profilePic;
+      console.log("data:", data, "data[0]", data[0].profilePic)
+      res.setHeader('Content-Type', 'image/jpeg')
+      res.send(profilePic)
+    }
+    else{
+      const placeholderImagePath = './assets/placeholder.jpg';
+      fs.readFile(placeholderImagePath, (err, placeholderImageBuffer) => {
+        if (err) {
+          console.error('Error reading placeholder image:', err);
+          res.status(500).send('Internal Server Error');
+          return;
+        }
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.send(placeholderImageBuffer);
+      });
+    }
+  })
 });
 
 router.post('/authenticatelogin', (req, res) => {

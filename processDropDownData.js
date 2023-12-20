@@ -9,6 +9,7 @@ async function processDropDownData(props){
     const {
         dynamicOps,
         tableName,
+        tableColNames,
         operation,
         cols,
         storageLabel,
@@ -78,7 +79,7 @@ async function processDropDownData(props){
         console.log('DynamicOps are true');
         let colString = cols.join(', ');
 
-        let dataX = await processingDropDownData(tableName, colString, condition);
+        let dataX = await processingDropDownData(tableName, colString, tableColNames, condition);
         let result = dataX.map((item) => Object.values(item).join(' - '));
         const dropdownOptions = result.reduce((acc, option) => {
           const [id, name] = option.split(' - ');
@@ -142,7 +143,7 @@ async function processDropDownData(props){
     return JSON.stringify(jsonData);
 }
 
-async function processingDropDownData(tableName, colString, condition) {
+async function processingDropDownData(tableName, colString, tableColNames, condition) {
     try {
       let data = [];
       let query = ``;
@@ -152,7 +153,7 @@ async function processingDropDownData(tableName, colString, condition) {
         query = `SELECT DISTINCT ${colString} FROM ${tableName}`;
       }
       console.log(query);
-      data = await loadData(conn, null, null, query);
+      data = await loadData(conn, tableName, null, tableColNames, query);
       //console.log("Loaded data: ", data);
       return data;
     } catch (err) {

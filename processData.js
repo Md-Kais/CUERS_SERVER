@@ -5,12 +5,12 @@ const {loadData} = require('./loadData.js');
 async function processData(conn, changes, getTableInfo, query) {
     // console.log("passed tableInfo: ", getTableInfo);
     // console.log("Query at func", query);
-    const { tableName, row, operation, updatedData, conditionCheck } = changes;
+    const { tableName, row, operation, updatedData, tableColNames, conditionCheck } = changes;
     if (operation === 'load') {
       let data;
       try {
-        data = await loadData(conn, tableName, conditionCheck, query);
-        // console.log("Loaded data: ", data);
+        data = await loadData(conn, tableName, conditionCheck, tableColNames, query);
+        console.log("Loaded data: ", data);
         return data;
       } catch (err) {
         const status = await statusGenerator(undefined, err);
